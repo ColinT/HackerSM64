@@ -44,7 +44,7 @@ struct MemoryPool {
     struct MemoryBlock freeList;
 };
 
-extern uintptr_t sSegmentTable[NUM_TLB_SEGMENTS];
+extern uintptr_t sSegmentROMTable[NUM_TLB_SEGMENTS];
 extern u32 sPoolFreeSpace;
 extern u8 *sPoolStart;
 extern u8 *sPoolEnd;
@@ -58,7 +58,7 @@ extern struct MainPoolBlock *sPoolListHeadR;
  */
 struct MemoryPool *gEffectsMemoryPool;
 
-uintptr_t sSegmentTable[NUM_TLB_SEGMENTS];
+uintptr_t sSegmentROMTable[NUM_TLB_SEGMENTS];
 u32 sPoolFreeSpace;
 u8 *sPoolStart;
 u8 *sPoolEnd;
@@ -69,12 +69,12 @@ struct MainPoolBlock *sPoolListHeadR;
 static struct MainPoolState *gMainPoolState = NULL;
 
 uintptr_t set_segment_base_addr(s32 segment, void *addr) {
-    sSegmentTable[segment] = (uintptr_t) addr & 0x1FFFFFFF;
-    return sSegmentTable[segment];
+    sSegmentROMTable[segment] = (uintptr_t) addr & 0x1FFFFFFF;
+    return sSegmentROMTable[segment];
 }
 
 UNUSED void *get_segment_base_addr(s32 segment) {
-    return (void *) (sSegmentTable[segment] | 0x80000000);
+    return (void *) (sSegmentROMTable[segment] | 0x80000000);
 }
 
 #ifndef NO_SEGMENTED_MEMORY
@@ -82,11 +82,11 @@ void *segmented_to_virtual(const void *addr) {
     size_t segment = (uintptr_t) addr >> 24;
     size_t offset = (uintptr_t) addr & 0x00FFFFFF;
 
-    return (void *) ((sSegmentTable[segment] + offset) | 0x80000000);
+    return (void *) ((sSegmentROMTable[segment] + offset) | 0x80000000);
 }
 
 void *virtual_to_segmented(u32 segment, const void *addr) {
-    size_t offset = ((uintptr_t) addr & 0x1FFFFFFF) - sSegmentTable[segment];
+    size_t offset = ((uintptr_t) addr & 0x1FFFFFFF) - sSegmentROMTable[segment];
 
     return (void *) ((segment << 24) + offset);
 }
@@ -95,7 +95,7 @@ void move_segment_table_to_dmem(void) {
     s32 i;
 
     for (i = 0; i < 16; i++) {
-        gSPSegment(gDisplayListHead++, i, sSegmentTable[i]);
+        gSPSegment(gDisplayListHead++, i, sSegmentROMTable[i]);
     }
 }
 #else
